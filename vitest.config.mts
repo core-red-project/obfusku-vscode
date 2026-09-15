@@ -3,7 +3,9 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   resolve: {
-    alias: [{ find: "vscode", replacement: path.resolve(__dirname, "tests/mocks/vscode.ts") }],
+    alias: [
+      { find: "vscode", replacement: path.resolve(import.meta.dirname, "tests/mocks/vscode.ts") },
+    ],
   },
   test: {
     include: ["tests/**/*.test.ts"],

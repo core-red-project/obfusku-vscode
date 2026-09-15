@@ -185,10 +185,15 @@
     "@vscode/vsce": "^3.9.2",
     "esbuild": "^0.28.2",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.10"
+    "vitest": "^5.0.1"
   },
   "dependencies": {
     "smol-toml": "^1.8.0",
     "vscode-languageclient": "^9.0.1"
+  },
+  "overrides": {
+    "fdir": {
+      "picomatch": "^4.0.0"
+    }
   }
 }

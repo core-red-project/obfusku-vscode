@@ -10,7 +10,7 @@ scripts/**
 **/*.ts
 !dist/**/*.js
 tsconfig.json
-vitest.config.ts
+vitest.config.mts
 biome.json
 Justfile
 .nvmrc
