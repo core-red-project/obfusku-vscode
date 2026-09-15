@@ -1,0 +1,194 @@
+{
+  "name": "obfusku-vscode",
+  "displayName": "Obfusku",
+  "description": "Language support for Obfusku, the symbolic ritualistic esoteric programming language.",
+  "version": "0.1.0",
+  "publisher": "SxnnysideProject",
+  "author": {
+    "name": "Core Red Project",
+    "url": "https://github.com/core-red-project"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/core-red-project/obfusku-vscode#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/core-red-project/obfusku-vscode.git"
+  },
+  "bugs": {
+    "url": "https://github.com/core-red-project/obfusku-vscode/issues"
+  },
+  "icon": "assets/icon.png",
+  "galleryBanner": {
+    "color": "#0D0D0F",
+    "theme": "dark"
+  },
+  "keywords": [
+    "obfusku",
+    "esolang",
+    "esoteric",
+    "symbolic",
+    "syntax highlighting",
+    "hindley-milner"
+  ],
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "qna": "marketplace",
+  "activationEvents": [
+    "onLanguage:obfusku",
+    "workspaceContains:**/obfusku.toml"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "obfusku",
+        "aliases": [
+          "Obfusku",
+          "obfusku"
+        ],
+        "extensions": [
+          ".obk"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./assets/file-icon-light.svg",
+          "dark": "./assets/file-icon-dark.svg"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "obfusku",
+        "scopeName": "source.obfusku",
+        "path": "./syntaxes/obfusku.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "obfusku",
+        "path": "./snippets/obfusku.json"
+      }
+    ],
+    "configuration": {
+      "title": "Obfusku",
+      "properties": {
+        "obfusku.path": {
+          "type": "string",
+          "default": "obfusku",
+          "markdownDescription": "Path to the `obfusku` CLI executable, used for formatting and commands (`Run`, `Type Check`, `Open REPL`). Defaults to resolving `obfusku` from `PATH`."
+        },
+        "obfusku.lspPath": {
+          "type": "string",
+          "default": "obfusku-lsp",
+          "markdownDescription": "Path to the `obfusku-lsp` executable, used for live diagnostics. Defaults to resolving `obfusku-lsp` from `PATH`."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "obfusku.run",
+        "title": "Obfusku: Run File",
+        "icon": "$(play)"
+      },
+      {
+        "command": "obfusku.typecheck",
+        "title": "Obfusku: Type Check File",
+        "icon": "$(check)"
+      },
+      {
+        "command": "obfusku.format",
+        "title": "Obfusku: Format File"
+      },
+      {
+        "command": "obfusku.openRepl",
+        "title": "Obfusku: Open REPL",
+        "icon": "$(terminal)"
+      },
+      {
+        "command": "obfusku.build",
+        "title": "Obfusku: Build Project",
+        "icon": "$(package)"
+      },
+      {
+        "command": "obfusku.showLspOutput",
+        "title": "Obfusku: Show Language Server Output"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "obfusku.run",
+          "when": "editorLangId == obfusku",
+          "group": "navigation"
+        },
+        {
+          "command": "obfusku.typecheck",
+          "when": "editorLangId == obfusku",
+          "group": "navigation"
+        },
+        {
+          "command": "obfusku.build",
+          "when": "editorLangId == obfusku && obfusku.hasProject",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "obfusku.build",
+          "when": "obfusku.hasProject"
+        }
+      ]
+    },
+    "taskDefinitions": [
+      {
+        "type": "obfusku",
+        "required": [
+          "command"
+        ],
+        "properties": {
+          "command": {
+            "type": "string",
+            "enum": [
+              "build",
+              "run"
+            ],
+            "description": "The obfusku subcommand to run against the Project."
+          }
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "node scripts/build.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "typecheck": "tsc -p . --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build",
+    "clean": "rm -rf dist *.vsix",
+    "package": "vsce package --no-dependencies",
+    "publish": "vsce publish --no-dependencies"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.13",
+    "@types/node": "^22.10.2",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.9.2",
+    "esbuild": "^0.28.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
+  },
+  "dependencies": {
+    "smol-toml": "^1.8.0",
+    "vscode-languageclient": "^9.0.1"
+  }
+}

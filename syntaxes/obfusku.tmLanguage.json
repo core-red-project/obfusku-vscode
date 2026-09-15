@@ -1,0 +1,204 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Obfusku",
+  "scopeName": "source.obfusku",
+  "fileTypes": ["obk"],
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#literals" },
+    { "include": "#module" },
+    { "include": "#binder" },
+    { "include": "#control" },
+    { "include": "#base-types" },
+    { "include": "#combinators" },
+    { "include": "#operators" },
+    { "include": "#punctuation" },
+    { "include": "#type-name" },
+    { "include": "#identifier" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.obfusku",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.obfusku",
+          "begin": "⌈",
+          "end": "⌉",
+          "patterns": [{ "include": "#comments" }]
+        }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.obfusku",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.obfusku",
+          "match": "\\\\[\"\\\\ntr0]"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.real.obfusku",
+          "match": "\\b[0-9]+\\.[0-9]+([eE][+-]?[0-9]+)?\\b"
+        },
+        {
+          "name": "constant.numeric.integer.obfusku",
+          "match": "\\b[0-9]+\\b"
+        }
+      ]
+    },
+    "literals": {
+      "patterns": [
+        {
+          "name": "constant.language.boolean.obfusku",
+          "match": "[◉◎]"
+        },
+        {
+          "name": "constant.language.unit.obfusku",
+          "match": "∅"
+        },
+        {
+          "name": "variable.language.wildcard.obfusku",
+          "match": "(?<![a-zA-Z0-9_])_(?![a-zA-Z0-9_])"
+        }
+      ]
+    },
+    "module": {
+      "patterns": [
+        {
+          "name": "keyword.control.import.obfusku",
+          "match": "⟲"
+        },
+        {
+          "name": "keyword.control.export.obfusku",
+          "match": "⟳"
+        },
+        {
+          "name": "punctuation.terminator.module.obfusku",
+          "match": "❧"
+        }
+      ]
+    },
+    "binder": {
+      "patterns": [
+        {
+          "name": "keyword.operator.bind.obfusku",
+          "match": "≔"
+        },
+        {
+          "name": "storage.modifier.mutability.obfusku",
+          "match": "˚"
+        },
+        {
+          "name": "keyword.operator.rebind.obfusku",
+          "match": "⚙︎"
+        },
+        {
+          "name": "storage.type.function.obfusku",
+          "match": "λ"
+        },
+        {
+          "name": "keyword.operator.arrow.obfusku",
+          "match": "→"
+        }
+      ]
+    },
+    "control": {
+      "patterns": [
+        {
+          "name": "keyword.control.match.obfusku",
+          "match": "⟡"
+        },
+        {
+          "name": "keyword.control.raise.obfusku",
+          "match": "☄"
+        },
+        {
+          "name": "keyword.control.catch.obfusku",
+          "match": "☊"
+        },
+        {
+          "name": "punctuation.separator.arm.obfusku",
+          "match": "⟢"
+        },
+        {
+          "name": "keyword.operator.pipe.obfusku",
+          "match": "▷"
+        },
+        {
+          "name": "variable.other.pipe-reference.obfusku",
+          "match": "◈"
+        },
+        {
+          "name": "variable.other.hole.obfusku",
+          "match": "•"
+        }
+      ]
+    },
+    "base-types": {
+      "name": "support.type.primitive.obfusku",
+      "match": "[⟁⧆⌘○]"
+    },
+    "combinators": {
+      "name": "support.function.obfusku",
+      "match": "[⊡⊟⊞⊙⟐⌿⌽↗↘⊘⦰⁝⧫✓✗⌁↑↓⌬#]"
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.arithmetic.obfusku",
+          "match": "[✚☠︎✱÷⌗¬−]"
+        },
+        {
+          "name": "keyword.operator.logical.obfusku",
+          "match": "[∧⊻∨]"
+        },
+        {
+          "name": "keyword.operator.comparison.obfusku",
+          "match": "[≡≠≤≥<>]"
+        }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        {
+          "name": "punctuation.section.braces.obfusku",
+          "match": "[{}]"
+        },
+        {
+          "name": "punctuation.section.brackets.obfusku",
+          "match": "[\\[\\]]"
+        },
+        {
+          "name": "punctuation.section.parens.obfusku",
+          "match": "[()]"
+        },
+        {
+          "name": "punctuation.separator.comma.obfusku",
+          "match": ","
+        },
+        {
+          "name": "punctuation.separator.colon.obfusku",
+          "match": ":"
+        }
+      ]
+    },
+    "type-name": {
+      "name": "entity.name.type.obfusku",
+      "match": "\\b[A-Z][a-zA-Z0-9_]*\\b"
+    },
+    "identifier": {
+      "name": "variable.other.obfusku",
+      "match": "\\b[a-z][a-zA-Z0-9_]*\\b"
+    }
+  }
+}

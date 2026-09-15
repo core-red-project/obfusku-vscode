@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Obfusku Project Manifest",
+  "description": "obfusku.toml — the Project marker (spec/adr/ADR-020-obfusku-project-manifest.md). The directory containing this file is the Project root.",
+  "type": "object",
+  "required": ["format", "entry"],
+  "properties": {
+    "format": {
+      "type": "integer",
+      "const": 1,
+      "description": "Manifest schema version. Fixed at 1 — the only format this tooling and the obfusku 1.0.0 CLI/LSP support."
+    },
+    "entry": {
+      "type": "string",
+      "pattern": "^[^/\\\\]+$",
+      "description": "Bare module name (no '.obk' suffix, no path separators) resolved by a whole-Project-tree filename search, the same way a '⟲' import resolves (ADR-018). \"main\" matches main.obk wherever it sits under the Project root."
+    },
+    "name": {
+      "type": "string",
+      "description": "Optional, informational-only human-readable project identity. Has no resolution semantics in format 1."
+    }
+  },
+  "additionalProperties": true
+}

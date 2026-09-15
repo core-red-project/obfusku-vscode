@@ -1,0 +1,58 @@
+{
+  "Function declaration": {
+    "prefix": "lambda",
+    "body": ["λ${1:name}(${2:param}: ${3:Type}): ${4:ReturnType} → ${0:expr}"]
+  },
+  "Anonymous lambda": {
+    "prefix": "fn",
+    "body": ["λ(${1:param}) → ${0:expr}"]
+  },
+  "Value binding": {
+    "prefix": "bind",
+    "body": ["${1:name} ≔ ${0:expr}"]
+  },
+  "Mutable value binding": {
+    "prefix": "bindmut",
+    "body": ["${1:name} ≔˚ ${0:expr}"]
+  },
+  "Sum type declaration": {
+    "prefix": "typesum",
+    "body": ["${1:Name} ≔ { ${2:Variant}(${3:Type}) ⟢ ${0:Variant2}(${4:Type}) }"]
+  },
+  "Record type declaration": {
+    "prefix": "typerecord",
+    "body": ["${1:Name} ≔ { ${2:field}: ${3:Type} ⟢ ${0:field2}: ${4:Type} }"]
+  },
+  "Tuple type declaration": {
+    "prefix": "typetuple",
+    "body": ["${1:Name} ≔ (${2:Type}, ${0:Type2})"]
+  },
+  "Match expression": {
+    "prefix": "match",
+    "body": ["⟡ ${1:scrutinee} {", "\t${2:Pattern} → ${3:expr}", "\t⟢ ${4:_} → ${0:expr}", "}"]
+  },
+  "Conditional (Bool match)": {
+    "prefix": "if",
+    "body": ["⟡ ${1:condition} {", "\t◉ → ${2:thenExpr}", "\t⟢ ◎ → ${0:elseExpr}", "}"]
+  },
+  "Raise exception": {
+    "prefix": "raise",
+    "body": ["☄ ${0:exception}"]
+  },
+  "Catch exception": {
+    "prefix": "catch",
+    "body": ["☊ ${1:expr} λ(${2:err}) → ${0:handler}"]
+  },
+  "Import module": {
+    "prefix": "import",
+    "body": ["⟲ ${0:ModuleName}"]
+  },
+  "Array literal": {
+    "prefix": "array",
+    "body": ["[${0:elements}]"]
+  },
+  "Module end marker": {
+    "prefix": "endmodule",
+    "body": ["❧"]
+  }
+}

@@ -1,0 +1,9 @@
+node_modules/
+dist/
+out/
+*.vsix
+.DS_Store
+.vscode/settings.json
+
+# Animoria cache & staged cleanup
+.animoria/
