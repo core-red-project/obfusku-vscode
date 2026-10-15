@@ -31,8 +31,14 @@ jobs:
         run: pnpm commitlint --from "origin/${{ github.base_ref }}" --to "${{ github.event.pull_request.head.sha }}"
 
   check:
-    name: Quality Gate
+    # The extension supports obfusku 1.0.x and 1.1.x (README, "Compatible
+    # versions"); the LSP and CLI tests adapt to the pair installed here.
+    name: Quality Gate (obfusku ${{ matrix.obfusku }})
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        obfusku: ['1.0.0', '1.1.0']
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install just
@@ -46,12 +52,24 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: just install
-      - name: Install obfusku CLI
+      - name: Install obfusku CLI and language server
+        env:
+          OBFUSKU_VERSION: ${{ matrix.obfusku }}
+          INSTALL_DIR: ${{ runner.temp }}/obfusku-bin
         run: |
           set -euo pipefail
           curl -fsSL https://raw.githubusercontent.com/core-red-project/obfusku/main/install.sh | bash
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          echo "$INSTALL_DIR" >> "$GITHUB_PATH"
+      - name: Installed versions match the matrix
+        env:
+          WANT: ${{ matrix.obfusku }}
+        run: |
+          set -euo pipefail
+          got="$(obfusku --version | awk '{print $2}')"
+          [ "$got" = "$WANT" ] || { echo "::error::obfusku is $got, expected $WANT"; exit 1; }
+          command -v obfusku-lsp
       - name: Run quality gate
         run: just check
       - name: Package extension (dry run)
+        if: matrix.obfusku == '1.1.0'
         run: just package

@@ -17,6 +17,7 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `Obfusku: Run Project Tests` command and a `test` task (obfusku ≥ 1.1).
 - A one-time notice for a CLI older than 1.1 or newer than 1.x.
 - `[test] timeout` in the `obfusku.toml` schema.
+- CI runs the quality gate against obfusku 1.0.0 and 1.1.0.
 - `tests/lsp`: drives the real `obfusku-lsp` over stdio, against whichever 1.0.x or 1.1.x pair is selected.
 - Complete TextMate grammar expansion:
   - Numeric literals support for hex (`0x...`), binary (`0b...`), octal (`0o...`), underscored digit separators, and scientific floats.
