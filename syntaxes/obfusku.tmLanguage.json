@@ -4,19 +4,54 @@
   "scopeName": "source.obfusku",
   "fileTypes": ["obk"],
   "patterns": [
-    { "include": "#comments" },
-    { "include": "#strings" },
-    { "include": "#numbers" },
-    { "include": "#literals" },
-    { "include": "#module" },
-    { "include": "#binder" },
-    { "include": "#control" },
-    { "include": "#base-types" },
-    { "include": "#combinators" },
-    { "include": "#operators" },
-    { "include": "#punctuation" },
-    { "include": "#type-name" },
-    { "include": "#identifier" }
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#literals"
+    },
+    {
+      "include": "#module"
+    },
+    {
+      "include": "#binder"
+    },
+    {
+      "include": "#control"
+    },
+    {
+      "include": "#host"
+    },
+    {
+      "include": "#bytes-ops"
+    },
+    {
+      "include": "#base-types"
+    },
+    {
+      "include": "#constructors"
+    },
+    {
+      "include": "#combinators"
+    },
+    {
+      "include": "#operators"
+    },
+    {
+      "include": "#punctuation"
+    },
+    {
+      "include": "#type-name"
+    },
+    {
+      "include": "#identifier"
+    }
   ],
   "repository": {
     "comments": {
@@ -29,7 +64,11 @@
           "name": "comment.block.obfusku",
           "begin": "⌈",
           "end": "⌉",
-          "patterns": [{ "include": "#comments" }]
+          "patterns": [
+            {
+              "include": "#comments"
+            }
+          ]
         }
       ]
     },
@@ -40,19 +79,31 @@
       "patterns": [
         {
           "name": "constant.character.escape.obfusku",
-          "match": "\\\\[\"\\\\ntr0]"
+          "match": "\\\\(?:[\"\\\\ntr0]|u\\{[0-9A-Fa-f]{1,6}\\})"
         }
       ]
     },
     "numbers": {
       "patterns": [
         {
+          "name": "constant.numeric.hex.obfusku",
+          "match": "\\b0[xX][0-9A-Fa-f][0-9A-Fa-f_]*\\b"
+        },
+        {
+          "name": "constant.numeric.binary.obfusku",
+          "match": "\\b0[bB][01][01_]*\\b"
+        },
+        {
+          "name": "constant.numeric.octal.obfusku",
+          "match": "\\b0[oO][0-7][0-7_]*\\b"
+        },
+        {
           "name": "constant.numeric.real.obfusku",
-          "match": "\\b[0-9]+\\.[0-9]+([eE][+-]?[0-9]+)?\\b"
+          "match": "\\b[0-9][0-9_]*(?:\\.[0-9][0-9_]*(?:[eE][+-]?[0-9]+)?|[eE][+-]?[0-9]+)\\b"
         },
         {
           "name": "constant.numeric.integer.obfusku",
-          "match": "\\b[0-9]+\\b"
+          "match": "\\b[0-9][0-9_]*\\b"
         }
       ]
     },
@@ -127,6 +178,10 @@
           "match": "☊"
         },
         {
+          "name": "keyword.control.exception-declaration.obfusku",
+          "match": "☈"
+        },
+        {
           "name": "punctuation.separator.arm.obfusku",
           "match": "⟢"
         },
@@ -145,12 +200,36 @@
       ]
     },
     "base-types": {
-      "name": "support.type.primitive.obfusku",
-      "match": "[⟁⧆⌘○]"
+      "patterns": [
+        {
+          "name": "support.type.primitive.obfusku",
+          "match": "[⟁⧆⌘○]"
+        },
+        {
+          "name": "support.type.bytes.obfusku",
+          "match": "⌭(?![#⌷⍪⊠⇋⇌⌕⌘⍕])"
+        }
+      ]
     },
     "combinators": {
-      "name": "support.function.obfusku",
-      "match": "[⊡⊟⊞⊙⟐⌿⌽↗↘⊘⦰⁝⧫✓✗⌁↑↓⌬#]"
+      "patterns": [
+        {
+          "name": "support.function.collection.obfusku",
+          "match": "[⟐⌿⌽⊡⊟⊞#⊙⊕⍪⌷⍳⊠⍋⇋⇌⍬⊎⊖⌕⊛⌸⌹⍭⊌⊝∈⊚⌻]"
+        },
+        {
+          "name": "support.function.text.obfusku",
+          "match": "[⫽⫴⌫∋⍴⊏↦⇝⌶⍂⌯⌮⇧⇩⤳⊢⊣⍸]"
+        },
+        {
+          "name": "support.function.numeric.obfusku",
+          "match": "[∥⋆⊓⊔⊗∼⋘⋙⊥⊤√⌊⌃⌾⋇ℯℓ∿∾∠⍥∦ϖ∞]"
+        },
+        {
+          "name": "support.function.conversion.obfusku",
+          "match": "[↗↘⍕⚑]"
+        }
+      ]
     },
     "operators": {
       "patterns": [
@@ -189,6 +268,10 @@
         {
           "name": "punctuation.separator.colon.obfusku",
           "match": ":"
+        },
+        {
+          "name": "punctuation.accessor.dot.obfusku",
+          "match": "\\."
         }
       ]
     },
@@ -199,6 +282,18 @@
     "identifier": {
       "name": "variable.other.obfusku",
       "match": "\\b[a-z][a-zA-Z0-9_]*\\b"
+    },
+    "host": {
+      "name": "support.function.host.obfusku",
+      "match": "⌁[↑↓↯⍰⊕⊖⇄⧉]?[⌬⌥⎈⍉⌂⌭⎙⎚⌖⧗⧖⚀⚁]?"
+    },
+    "bytes-ops": {
+      "name": "support.function.bytes.obfusku",
+      "match": "⌭[#⌷⍪⊠⇋⇌⌕⌘⍕]"
+    },
+    "constructors": {
+      "name": "support.constant.constructor.obfusku",
+      "match": "[⊘⁝⦰⧫✓✗⌑➤◇]"
     }
   }
 }

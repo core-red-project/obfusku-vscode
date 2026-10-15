@@ -1,15 +1,15 @@
-import * as esbuild from "esbuild";
+import * as esbuild from 'esbuild';
 
-const watch = process.argv.includes("--watch");
+const watch = process.argv.includes('--watch');
 
 const options = {
-  entryPoints: ["src/extension.ts"],
+  entryPoints: ['src/extension.ts'],
   bundle: true,
-  outfile: "dist/extension.js",
-  platform: "node",
-  format: "cjs",
-  target: "node18",
-  external: ["vscode"],
+  outfile: 'dist/extension.js',
+  platform: 'node',
+  format: 'cjs',
+  target: 'node18',
+  external: ['vscode'],
   sourcemap: true,
   minify: !watch,
 };

@@ -1,24 +1,204 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Obfusku Project Manifest",
-  "description": "obfusku.toml — the Project marker (spec/adr/ADR-020-obfusku-project-manifest.md). The directory containing this file is the Project root.",
+  "description": "obfusku.toml — the Project marker (ADR-020, ADR-029). The directory containing this file is the Project root.",
   "type": "object",
-  "required": ["format", "entry"],
+  "required": [
+    "format"
+  ],
   "properties": {
     "format": {
       "type": "integer",
-      "const": 1,
-      "description": "Manifest schema version. Fixed at 1 — the only format this tooling and the obfusku 1.0.0 CLI/LSP support."
-    },
-    "entry": {
-      "type": "string",
-      "pattern": "^[^/\\\\]+$",
-      "description": "Bare module name (no '.obk' suffix, no path separators) resolved by a whole-Project-tree filename search, the same way a '⟲' import resolves (ADR-018). \"main\" matches main.obk wherever it sits under the Project root."
+      "enum": [
+        1,
+        2
+      ],
+      "description": "Manifest schema version. Format 1 names an entry module and tolerates unknown keys; format 2 adds [project], [entry], [bundle], [test], [capabilities] and [dependencies] and rejects unknown keys."
     },
     "name": {
       "type": "string",
-      "description": "Optional, informational-only human-readable project identity. Has no resolution semantics in format 1."
+      "description": "Format 1 only: informational project identity. In format 2 use [project] name."
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Project identity; the default name of a bundled executable."
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+(\\.[0-9]+){0,2}$"
+        },
+        "description": {
+          "type": "string"
+        },
+        "license": {
+          "type": "string"
+        },
+        "authors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "obfusku": {
+          "type": "string",
+          "description": "Minimum interpreter version, e.g. \">=1.1.0\". An older interpreter refuses to run the project."
+        }
+      }
+    },
+    "entry": {
+      "description": "Format 1: a bare module name. Format 2: a bare module name, or a table with exactly one of 'module' or 'path'.",
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[^/\\\\]+$"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "module": {
+              "type": "string",
+              "pattern": "^[^/\\\\]+$",
+              "description": "Bare module name, found by a whole-Project-tree filename search (ADR-018)."
+            },
+            "path": {
+              "type": "string",
+              "description": "A '.obk' file inside the Project, relative to its root."
+            }
+          }
+        }
+      ]
+    },
+    "bundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "output": {
+          "type": "string",
+          "description": "File name of the executable written by 'obfusku bundle'."
+        }
+      }
+    },
+    "test": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "include": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Globs of the test files 'obfusku test' runs; default tests/**/*.obk."
+        },
+        "timeout": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Seconds one test file may run before 'obfusku test' kills it (default 60)."
+        }
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "What the program may use. When this table is present, anything not set is denied.",
+      "properties": {
+        "console": {
+          "type": "boolean",
+          "description": "Text and byte streams, error stream, terminal query."
+        },
+        "fs": {
+          "enum": [
+            "none",
+            "project",
+            "cwd"
+          ],
+          "description": "Root of the file natives: the Project root, or the working directory."
+        },
+        "env": {
+          "type": "boolean",
+          "description": "Environment variables (⌁↓⎈)."
+        },
+        "args": {
+          "type": "boolean",
+          "description": "Program arguments (⌁↓⌥)."
+        },
+        "clock": {
+          "type": "boolean",
+          "description": "Wall and monotonic clocks, sleep."
+        },
+        "random": {
+          "type": "boolean",
+          "description": "Integer and real dice."
+        },
+        "exit": {
+          "type": "boolean",
+          "description": "Process exit (⌁↯)."
+        }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "description": "Modules importable by name. Git dependencies are pinned in obfusku.lock by 'obfusku fetch'.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "A local Project directory."
+          },
+          "git": {
+            "type": "string",
+            "description": "Any URL git can clone."
+          },
+          "github": {
+            "type": "string",
+            "pattern": "^[^/]+/[^/]+$",
+            "description": "owner/repo on GitHub."
+          },
+          "gitlab": {
+            "type": "string",
+            "pattern": "^[^/]+(/[^/]+)+$",
+            "description": "group/repo on GitLab."
+          },
+          "tag": {
+            "type": "string"
+          },
+          "rev": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$",
+            "description": "A full commit hash."
+          },
+          "branch": {
+            "type": "string"
+          }
+        }
+      }
     }
   },
-  "additionalProperties": true
+  "if": {
+    "properties": {
+      "format": {
+        "const": 1
+      }
+    }
+  },
+  "then": {
+    "required": [
+      "format",
+      "entry"
+    ],
+    "additionalProperties": true
+  },
+  "else": {
+    "required": [
+      "format",
+      "entry"
+    ],
+    "additionalProperties": false
+  }
 }

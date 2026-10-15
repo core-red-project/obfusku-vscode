@@ -1,7 +1,7 @@
-import * as fs from "node:fs/promises";
-import * as path from "node:path";
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 
-export const MANIFEST_FILE_NAME = "obfusku.toml";
+export const MANIFEST_FILE_NAME = 'obfusku.toml';
 
 /**
  * Walks upward from `startPath` (a file or directory) to the nearest

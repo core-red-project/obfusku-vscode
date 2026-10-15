@@ -1,7 +1,7 @@
-import * as fs from "node:fs/promises";
-import * as path from "node:path";
-import { parse as parseToml } from "smol-toml";
-import { MANIFEST_FILE_NAME } from "./find-project-root";
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
+import { parse as parseToml } from 'smol-toml';
+import { MANIFEST_FILE_NAME } from './find-project-root';
 
 /**
  * Reads `<projectRoot>/obfusku.toml`'s `entry` field and resolves it to
@@ -13,12 +13,25 @@ import { MANIFEST_FILE_NAME } from "./find-project-root";
  */
 export async function resolveEntryFile(projectRoot: string): Promise<string | undefined> {
   try {
-    const manifestText = await fs.readFile(path.join(projectRoot, MANIFEST_FILE_NAME), "utf8");
+    const manifestText = await fs.readFile(path.join(projectRoot, MANIFEST_FILE_NAME), 'utf8');
     const manifest = parseToml(manifestText) as { entry?: unknown };
-    if (typeof manifest.entry !== "string" || manifest.entry.length === 0) {
-      return undefined;
+    // Format 1/2 string, or a format 2 `[entry]` table with `module` or `path`.
+    const entry = manifest.entry;
+    if (typeof entry === 'string' && entry.length > 0) {
+      return await findModuleFile(projectRoot, entry);
     }
-    return await findModuleFile(projectRoot, manifest.entry);
+    if (entry && typeof entry === 'object') {
+      const { module, path: relative } = entry as { module?: unknown; path?: unknown };
+      if (typeof relative === 'string' && relative.length > 0) {
+        const file = path.resolve(projectRoot, relative);
+        const inside = path.relative(projectRoot, file);
+        return inside.startsWith('..') || path.isAbsolute(inside) ? undefined : file;
+      }
+      if (typeof module === 'string' && module.length > 0) {
+        return await findModuleFile(projectRoot, module);
+      }
+    }
+    return undefined;
   } catch {
     return undefined;
   }

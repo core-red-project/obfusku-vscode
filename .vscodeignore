@@ -20,5 +20,12 @@ CODE_OF_CONDUCT.md
 SECURITY.md
 SUPPORT.md
 .github/**
+.husky/**
+.editorconfig
+.gitattributes
+pnpm-lock.yaml
+pnpm-workspace.yaml
+commitlint.config.mjs
+cliff.toml
 assets/icon.webp
 assets/*.psd

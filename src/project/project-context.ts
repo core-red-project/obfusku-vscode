@@ -1,5 +1,5 @@
-import * as vscode from "vscode";
-import { findProjectRoot, MANIFEST_FILE_NAME } from "./find-project-root";
+import * as vscode from 'vscode';
+import { findProjectRoot, MANIFEST_FILE_NAME } from './find-project-root';
 
 /**
  * Tracks whether the active editor sits inside an Obfusku Project (a
@@ -21,7 +21,7 @@ export class ProjectContext implements vscode.Disposable {
         ) {
           void this.refresh(vscode.window.activeTextEditor);
         }
-      })
+      }),
     );
     void this.refresh(vscode.window.activeTextEditor);
   }
@@ -33,13 +33,13 @@ export class ProjectContext implements vscode.Disposable {
   private async refresh(editor: vscode.TextEditor | undefined): Promise<void> {
     const document = editor?.document;
     this.root =
-      document && document.uri.scheme === "file" && document.languageId === "obfusku"
+      document && document.uri.scheme === 'file' && document.languageId === 'obfusku'
         ? await findProjectRoot(document.uri.fsPath)
         : undefined;
     await vscode.commands.executeCommand(
-      "setContext",
-      "obfusku.hasProject",
-      this.root !== undefined
+      'setContext',
+      'obfusku.hasProject',
+      this.root !== undefined,
     );
   }
 

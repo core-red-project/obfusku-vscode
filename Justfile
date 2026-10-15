@@ -1,29 +1,35 @@
 install:
-    npm install
+    pnpm install --frozen-lockfile
 
 dev:
-    npm run watch
+    pnpm run watch
 
 build:
-    npm run build
+    pnpm run build
 
 test:
-    npm test
+    pnpm test
 
 typecheck:
-    npm run typecheck
+    pnpm run typecheck
 
 lint:
-    npm run lint
+    pnpm run lint
 
 format:
-    npm run format
+    pnpm run format
 
-check:
-    npm run check
+format-check:
+    pnpm run format:check
+
+# Non-mutating gate: what pre-commit and CI run.
+check: format-check lint typecheck test build
 
 clean:
-    npm run clean
+    pnpm run clean
 
 package: build
-    npm run package
+    pnpm run package
+
+changelog:
+    git-cliff --latest --strip all -o RELEASE_NOTES.md

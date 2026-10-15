@@ -3,8 +3,8 @@ import {
   type LanguageClientOptions,
   type ServerOptions,
   TransportKind,
-} from "vscode-languageclient/node";
-import { obfuskuLspPath } from "../cli/run-cli";
+} from 'vscode-languageclient/node';
+import { obfuskuLspPath } from '../cli/run-cli';
 
 export function createLanguageClient(): LanguageClient {
   const serverOptions: ServerOptions = {
@@ -14,8 +14,8 @@ export function createLanguageClient(): LanguageClient {
   };
 
   const clientOptions: LanguageClientOptions = {
-    documentSelector: [{ scheme: "file", language: "obfusku" }],
+    documentSelector: [{ scheme: 'file', language: 'obfusku' }],
   };
 
-  return new LanguageClient("obfusku", "Obfusku Language Server", serverOptions, clientOptions);
+  return new LanguageClient('obfusku', 'Obfusku Language Server', serverOptions, clientOptions);
 }

@@ -1,3 +1,8 @@
-format = 1
-entry = "main"
-name = "project-demo"
+format = 2
+
+[project]
+name = "project-with-error"
+version = "0.1.0"
+
+[entry]
+module = "main"

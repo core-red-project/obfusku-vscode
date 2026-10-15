@@ -1,18 +1,33 @@
-import * as fs from "node:fs/promises";
-import * as os from "node:os";
-import * as path from "node:path";
-import * as vscode from "vscode";
-import { runObfusku } from "../cli/run-cli";
+import * as fs from 'node:fs/promises';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import * as vscode from 'vscode';
+import { cliInfo } from '../cli/cli-info';
+import { runObfusku } from '../cli/run-cli';
+
+let warnedLegacy = false;
 
 export class ObfuskuFormattingProvider implements vscode.DocumentFormattingEditProvider {
   async provideDocumentFormattingEdits(document: vscode.TextDocument): Promise<vscode.TextEdit[]> {
+    // obfusku 1.0's formatter deletes every comment; refusing is safer than
+    // rewriting a file with format-on-save.
+    const info = await cliInfo();
+    if (info && !info.safeFormat) {
+      if (!warnedLegacy) {
+        warnedLegacy = true;
+        vscode.window.showWarningMessage(
+          `Obfusku: formatting needs obfusku 1.1 or newer (found ${info.version}); older formatters delete comments. Upgrade to enable it.`,
+        );
+      }
+      return [];
+    }
     const tempFile = path.join(os.tmpdir(), `obfusku-fmt-${process.pid}-${Date.now()}.obk`);
-    await fs.writeFile(tempFile, document.getText(), "utf8");
+    await fs.writeFile(tempFile, document.getText(), 'utf8');
     try {
-      const result = await runObfusku(["fmt", tempFile]);
+      const result = await runObfusku(['fmt', tempFile]);
       if (result.notFound) {
         vscode.window.showWarningMessage(
-          "Obfusku: could not find the 'obfusku' executable. Set 'obfusku.path' in your settings."
+          "Obfusku: could not find the 'obfusku' executable. Set 'obfusku.path' in your settings.",
         );
         return [];
       }
@@ -22,7 +37,7 @@ export class ObfuskuFormattingProvider implements vscode.DocumentFormattingEditP
       }
       const fullRange = new vscode.Range(
         document.positionAt(0),
-        document.positionAt(document.getText().length)
+        document.positionAt(document.getText().length),
       );
       return [vscode.TextEdit.replace(fullRange, result.stdout)];
     } finally {

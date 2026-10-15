@@ -3,46 +3,59 @@ name: Release
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
 
 permissions:
   contents: write
 
 jobs:
   verify-version:
-    name: Verify version matches tag
-    runs-on: ubuntu-latest
+    name: Verify version
+    runs-on: ubuntu-24.04
     outputs:
-      version: ${{ steps.version.outputs.VERSION }}
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Extract version from tag
+        with:
+          fetch-depth: 0
+      - name: Tag is SemVer and matches the manifest
         id: version
-        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
-      - name: Assert package.json matches the tag
         env:
-          TAG_VERSION: ${{ steps.version.outputs.VERSION }}
+          TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          PKG_VERSION="$(node -p "require('./package.json').version")"
-          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
-            echo "::error::package.json version ($PKG_VERSION) does not match tag ($TAG_VERSION)"
-            exit 1
-          fi
+          version="${TAG#v}"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] \
+            || { echo "::error::tag is not SemVer: $TAG"; exit 1; }
+          manifest="$(node -p "require('./package.json').version")"
+          [ "$manifest" = "$version" ] \
+            || { echo "::error::manifest version ($manifest) does not match tag ($version)"; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Tag commit is on the default branch
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: git merge-base --is-ancestor "$GITHUB_SHA" "origin/$DEFAULT_BRANCH"
 
   release:
     name: Build, package, and publish
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: verify-version
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Install tools
+        uses: taiki-e/install-action@183e4297cca2404691e9380e1307288dced5c82a # v2.87.25
+        with:
+          tool: just@1.58.0,git-cliff@2.14.2
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '22'
-          cache: 'npm'
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: npm ci
+        run: just install
 
       - name: Install obfusku CLI
         run: |
@@ -50,28 +63,24 @@ jobs:
           curl -fsSL https://raw.githubusercontent.com/core-red-project/obfusku/main/install.sh | bash
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
-      - name: Format check
-        run: npm run format:check
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Test
-        run: npm test
-
-      - name: Build
-        run: npm run build
+      - name: Re-run quality gate
+        run: just check
 
       - name: Package extension
-        run: npx vsce package --no-dependencies -o "obfusku-vscode-${{ needs.verify-version.outputs.version }}.vsix"
+        run: pnpm exec vsce package --no-dependencies -o "obfusku-vscode-${{ needs.verify-version.outputs.version }}.vsix"
+
+      - name: Checksums and release notes
+        env:
+          VERSION: ${{ needs.verify-version.outputs.version }}
+        run: |
+          set -euo pipefail
+          sha256sum "obfusku-vscode-${{ needs.verify-version.outputs.version }}.vsix" > SHA256SUMS
+          just changelog
 
       - name: Publish to Visual Studio Marketplace
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
-        run: npx vsce publish --no-dependencies --packagePath "obfusku-vscode-${{ needs.verify-version.outputs.version }}.vsix"
+        run: pnpm exec vsce publish --no-dependencies --packagePath "obfusku-vscode-${{ needs.verify-version.outputs.version }}.vsix"
 
       - name: Publish to Open VSX
         env:
@@ -81,19 +90,10 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
-          files: obfusku-vscode-${{ needs.verify-version.outputs.version }}.vsix
-          generate_release_notes: true
-          body: |
-            ## Obfusku for VS Code v${{ needs.verify-version.outputs.version }}
-
-            See [CHANGELOG.md](https://github.com/core-red-project/obfusku-vscode/blob/main/CHANGELOG.md) for details.
-
-            ### Install
-            Search **Obfusku** in the VS Code Extensions panel, or download the `.vsix`
-            from this release and install manually:
-
-            ```
-            code --install-extension obfusku-vscode-${{ needs.verify-version.outputs.version }}.vsix
-            ```
+          files: |
+            obfusku-vscode-${{ needs.verify-version.outputs.version }}.vsix
+            SHA256SUMS
+          body_path: RELEASE_NOTES.md
+          prerelease: ${{ contains(github.ref_name, '-') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

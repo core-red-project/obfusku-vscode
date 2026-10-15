@@ -2,7 +2,8 @@
   "name": "obfusku-vscode",
   "displayName": "Obfusku",
   "description": "Language support for Obfusku, the symbolic ritualistic esoteric programming language.",
-  "version": "0.1.0",
+  "version": "0.2.0",
+  "packageManager": "pnpm@11.5.2",
   "publisher": "SxnnysideProject",
   "author": {
     "name": "Core Red Project",
@@ -109,6 +110,11 @@
         "icon": "$(terminal)"
       },
       {
+        "command": "obfusku.test",
+        "title": "Obfusku: Run Project Tests",
+        "icon": "$(beaker)"
+      },
+      {
         "command": "obfusku.build",
         "title": "Obfusku: Build Project",
         "icon": "$(package)"
@@ -140,6 +146,10 @@
         {
           "command": "obfusku.build",
           "when": "obfusku.hasProject"
+        },
+        {
+          "command": "obfusku.test",
+          "when": "obfusku.hasProject"
         }
       ]
     },
@@ -154,7 +164,8 @@
             "type": "string",
             "enum": [
               "build",
-              "run"
+              "run",
+              "test"
             ],
             "description": "The obfusku subcommand to run against the Project."
           }
@@ -176,20 +187,24 @@
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build",
     "clean": "rm -rf dist *.vsix",
     "package": "vsce package --no-dependencies",
-    "publish": "vsce publish --no-dependencies"
+    "publish": "vsce publish --no-dependencies",
+    "prepare": "husky"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.13",
-    "@types/node": "^22.10.2",
+    "@biomejs/biome": "^2.5.15",
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
+    "@types/node": "^22.20.5",
     "@types/vscode": "^1.85.0",
-    "@vscode/vsce": "^3.9.2",
+    "@vscode/vsce": "^4.0.0",
     "esbuild": "^0.28.2",
-    "typescript": "^5.9.3",
-    "vitest": "^5.0.1"
+    "husky": "^9.1.7",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.4"
   },
   "dependencies": {
-    "smol-toml": "^1.8.0",
-    "vscode-languageclient": "^9.0.1"
+    "smol-toml": "^1.9.1",
+    "vscode-languageclient": "^10.1.2"
   },
   "overrides": {
     "fdir": {

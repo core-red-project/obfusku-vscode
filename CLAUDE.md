@@ -9,30 +9,33 @@
 
 Language support for [Obfusku](https://github.com/core-red-project/obfusku) inside VS Code: syntax highlighting, formatting, live diagnostics, Project-aware commands and tasks, and snippets. It never reimplements language logic — every correctness decision (parsing, type inference, formatting rules) is delegated to the `obfusku`/`obfusku-lsp` binaries; this extension only wires their output into VS Code's UI surfaces.
 
-### Module Map
+## Where things go
 
-| Module | Responsibility |
+| Kind | Location |
 | --- | --- |
-| `src/extension.ts` | Activation entry point — wires every provider, command, and the LSP client together. |
-| `src/cli/run-cli.ts` | Thin `child_process` wrapper around the `obfusku` binary, reading `obfusku.path` from settings. |
-| `src/lsp/` | `vscode-languageclient` wiring to `obfusku-lsp` (`client.ts`) and its status bar indicator (`status-bar.ts`). |
-| `src/diagnostics/` | Diagnostic parsing (`parse-diagnostics.ts`, for the CLI's plain-text `severity: message (line:col)` format) and the CLI-backed fallback collection used by `Obfusku: Type Check File`. |
-| `src/formatting/` | `DocumentFormattingEditProvider` backed by `obfusku fmt` against a temp-file copy of the buffer. |
-| `src/project/` | Project discovery (`obfusku.toml`, walking upward per `ADR-017`/`ADR-020`), the `obfusku.hasProject` context key, entry-module resolution, and the optional Even Better TOML schema association. |
-| `src/tasks/` | `TaskProvider` for `build`/`run` tasks — uses `CustomExecution` rather than a declarative `problemMatcher` because the CLI's diagnostics carry no filename to match against. |
-| `src/commands/` | Command palette / editor-title commands (`run`, `typecheck`, `format`, `build`, `openRepl`). |
-| `syntaxes/obfusku.tmLanguage.json` | TextMate grammar, one-to-one with `spec/CONCRETE_SYMBOLIC_GRAMMAR.md`'s glyph table. |
-| `schemas/obfusku-toml.schema.json` | JSON Schema for `obfusku.toml`, matching `crates/obfusku-cli/src/project.rs`'s `Manifest` struct exactly. |
+| Activation entry point | `src/extension.ts` |
+| CLI wrapper | `src/cli/run-cli.ts` |
+| LSP client | `src/lsp/client.ts` |
+| LSP status bar indicator | `src/lsp/status-bar.ts` |
+| Diagnostic parsing & CLI fallback collection | `src/diagnostics/` |
+| Document formatting provider | `src/formatting/` |
+| Project discovery & context | `src/project/` |
+| Task provider for build & run | `src/tasks/` |
+| Commands | `src/commands/` |
+| TextMate grammar | `syntaxes/obfusku.tmLanguage.json` |
+| Project manifest JSON schema | `schemas/obfusku-toml.schema.json` |
+| Snippets | `snippets/obfusku.json` |
+| Tests (mirroring src/ path for path) | `tests/` |
 
 ---
 
 ## 2. Stack Profile & Tooling
 
 - **Runtime**: Node.js (required by the VS Code extension host — not Bun/Deno).
-- **Package Manager**: npm.
+- **Package Manager**: pnpm.
 - **Type Checker**: TypeScript compiler (`tsc --noEmit`), `strict: true` plus `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`.
 - **Formatter & Linter**: Biome (`biome format`, `biome lint`).
-- **Testing**: Vitest, with a hand-rolled `vscode` module mock (`tests/mocks/vscode.ts`) so unit tests need no VS Code host. One test (`tests/task-diagnostics.test.ts`) spawns the real `obfusku` CLI — it needs `obfusku` on `PATH` to pass.
+- **Testing**: Vitest, with a hand-rolled `vscode` module mock (`tests/mocks/vscode.ts`) so unit tests need no VS Code host.
 - **Bundler**: esbuild (`scripts/build.mjs`) — bundles everything except `vscode` itself into one `dist/extension.js`; required because Marketplace packages ship without `node_modules`.
 - **Packaging**: `@vscode/vsce`.
 
@@ -41,7 +44,7 @@ Language support for [Obfusku](https://github.com/core-red-project/obfusku) insi
 ## 3. Task Runner (`just`)
 
 ```bash
-just install     # npm install
+just install     # pnpm install --frozen-lockfile
 just dev         # esbuild --watch
 just build       # bundle dist/extension.js
 just test        # vitest run

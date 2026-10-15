@@ -9,7 +9,7 @@
   <em>Language support for Obfusku, the symbolic ritualistic esoteric programming language, directly inside VS Code.</em>
 </p>
 
-![Version](https://img.shields.io/badge/version-0.1.0-blue)
+![Version](https://img.shields.io/badge/version-0.2.0-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 [![CI](https://github.com/core-red-project/obfusku-vscode/workflows/CI/badge.svg)](https://github.com/core-red-project/obfusku-vscode/actions)
 
@@ -76,6 +76,25 @@ If they live somewhere else, point to them explicitly:
 }
 ```
 
+## Compatible versions
+
+The extension reads `obfusku --version` and enables only what that CLI can do. Tested against 1.0.0 and 1.1.0.
+
+| Feature | 1.0.x | 1.1.x |
+|---|---|---|
+| Live diagnostics (`obfusku-lsp`) | yes | yes |
+| Error in an imported module | drawn on the importing file at the imported file's line | pinned to line 1 with an "in an imported module" prefix |
+| Closing a file | its diagnostics stay in Problems | cleared |
+| Buffer not on disk yet | `could not read '<path>'` | checked against its directory |
+| `Type Check File`, Run, Build, REPL | yes (text output) | yes (JSON output) |
+| `Format File` | **disabled**: the 1.0 formatter deletes comments | yes |
+| `Run Project Tests` and the `test` task | no | yes |
+| Manifest format 2 (`[capabilities]`, `[dependencies]`…) | no | yes |
+
+The `obfusku-lsp` rows come from running the real server (`tests/lsp`, selectable with `OBFUSKU_LSP_PATH` and `OBFUSKU_PATH`); the extension cannot correct what a 1.0 server publishes.
+
+A 1.0.x CLI shows a notice once. Anything from 2.0 on is outside the tested range and also notices once; 1.x releases after 1.1 keep every 1.1 feature. Keep `obfusku` and `obfusku-lsp` on the same version.
+
 ## Settings
 
 | Setting | Default | Description |
@@ -87,8 +106,8 @@ If they live somewhere else, point to them explicitly:
 
 ## Known Limitations
 
-- A brand-new file with no project directory on disk yet won't get diagnostics until
-  it's saved once — `obfusku-lsp` resolves the project root from the file's real path.
+- With obfusku 1.0.x a brand-new file that is not on disk yet is reported as unreadable until it
+  is saved once; 1.1 checks it against its directory.
 - No hover, go-to-definition, or completion yet — `obfusku-lsp` currently implements
   `textDocument/publishDiagnostics` only.
 - Build/Run tasks don't use a declarative `problemMatcher`: the CLI's plain-text

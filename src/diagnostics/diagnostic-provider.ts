@@ -1,35 +1,57 @@
-import * as vscode from "vscode";
-import { runObfusku } from "../cli/run-cli";
-import { parseDiagnostics } from "./parse-diagnostics";
+import * as vscode from 'vscode';
+import { cliInfo } from '../cli/cli-info';
+import { runObfusku } from '../cli/run-cli';
+import { parseDiagnostics, parseJsonDiagnostics } from './parse-diagnostics';
+
+export interface RefreshResult {
+  notFound: boolean;
+  diagnostics: vscode.Diagnostic[];
+}
 
 export class ObfuskuDiagnostics implements vscode.Disposable {
-  private readonly collection = vscode.languages.createDiagnosticCollection("obfusku-check");
-  private notifiedMissingCli = false;
+  private readonly collection = vscode.languages.createDiagnosticCollection('obfusku-check');
+  private lspActive: () => boolean = () => false;
 
-  async refresh(document: vscode.TextDocument): Promise<void> {
-    if (document.languageId !== "obfusku" || document.uri.scheme !== "file") {
-      return;
+  /**
+   * While the language server is running it owns this file's Problems
+   * entries; publishing the CLI's copy as well would list every error twice.
+   */
+  deferToLsp(isActive: () => boolean): void {
+    this.lspActive = isActive;
+  }
+
+  /**
+   * Runs one `check` and returns what it found; the collection is only
+   * updated while the language server is not the owner of this file.
+   */
+  async refresh(document: vscode.TextDocument): Promise<RefreshResult> {
+    if (document.languageId !== 'obfusku' || document.uri.scheme !== 'file') {
+      return { notFound: false, diagnostics: [] };
     }
-    const result = await runObfusku(["check", document.uri.fsPath]);
+    const info = await cliInfo();
+    if (!info) {
+      return { notFound: true, diagnostics: [] };
+    }
+    const args = info.json
+      ? ['check', '--json', document.uri.fsPath]
+      : ['check', document.uri.fsPath];
+    const result = await runObfusku(args);
     if (result.notFound) {
-      this.warnMissingCli();
-      return;
+      return { notFound: true, diagnostics: [] };
     }
-    this.collection.set(document.uri, parseDiagnostics(result.stderr));
+    const diagnostics = info.json
+      ? (parseJsonDiagnostics(result.stdout) ?? parseDiagnostics(result.stderr))
+      : parseDiagnostics(result.stderr);
+    if (this.lspActive()) {
+      this.collection.delete(document.uri);
+    } else {
+      this.collection.set(document.uri, diagnostics);
+    }
+    return { notFound: false, diagnostics };
   }
 
   clear(document: vscode.TextDocument): void {
     this.collection.delete(document.uri);
-  }
-
-  private warnMissingCli(): void {
-    if (this.notifiedMissingCli) {
-      return;
-    }
-    this.notifiedMissingCli = true;
-    vscode.window.showWarningMessage(
-      "Obfusku: could not find the 'obfusku' executable. Set 'obfusku.path' in your settings."
-    );
   }
 
   dispose(): void {

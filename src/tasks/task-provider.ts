@@ -1,19 +1,20 @@
-import { spawn } from "node:child_process";
-import * as path from "node:path";
-import * as vscode from "vscode";
-import { obfuskuPath } from "../cli/run-cli";
-import { parseDiagnostics } from "../diagnostics/parse-diagnostics";
-import { fileExists, MANIFEST_FILE_NAME } from "../project/find-project-root";
-import { resolveEntryFile } from "../project/resolve-entry-file";
+import { spawn } from 'node:child_process';
+import * as path from 'node:path';
+import * as vscode from 'vscode';
+import { cliInfo } from '../cli/cli-info';
+import { obfuskuPath, runObfusku } from '../cli/run-cli';
+import { parseDiagnostics, parseJsonDiagnostics } from '../diagnostics/parse-diagnostics';
+import { fileExists, MANIFEST_FILE_NAME } from '../project/find-project-root';
+import { resolveEntryFile } from '../project/resolve-entry-file';
 
-type ObfuskuTaskCommand = "build" | "run";
+type ObfuskuTaskCommand = 'build' | 'run' | 'test';
 
 interface ObfuskuTaskDefinition extends vscode.TaskDefinition {
   command: ObfuskuTaskCommand;
 }
 
 export class ObfuskuTaskProvider implements vscode.TaskProvider {
-  static readonly taskType = "obfusku";
+  static readonly taskType = 'obfusku';
 
   constructor(private readonly diagnostics: vscode.DiagnosticCollection) {}
 
@@ -24,8 +25,11 @@ export class ObfuskuTaskProvider implements vscode.TaskProvider {
       if (!(await fileExists(path.join(folder.uri.fsPath, MANIFEST_FILE_NAME)))) {
         continue;
       }
-      tasks.push(this.createTask(folder, "build"));
-      tasks.push(this.createTask(folder, "run"));
+      tasks.push(this.createTask(folder, 'build'));
+      tasks.push(this.createTask(folder, 'run'));
+      if ((await cliInfo())?.test) {
+        tasks.push(this.createTask(folder, 'test'));
+      }
     }
     return tasks;
   }
@@ -35,10 +39,12 @@ export class ObfuskuTaskProvider implements vscode.TaskProvider {
     const folder = task.scope;
     if (
       definition.type !== ObfuskuTaskProvider.taskType ||
-      (definition.command !== "build" && definition.command !== "run") ||
-      typeof folder !== "object" ||
+      (definition.command !== 'build' &&
+        definition.command !== 'run' &&
+        definition.command !== 'test') ||
+      typeof folder !== 'object' ||
       !folder ||
-      !("uri" in folder)
+      !('uri' in folder)
     ) {
       return undefined;
     }
@@ -48,10 +54,10 @@ export class ObfuskuTaskProvider implements vscode.TaskProvider {
   private createTask(folder: vscode.WorkspaceFolder, command: ObfuskuTaskCommand): vscode.Task {
     const definition: ObfuskuTaskDefinition = { type: ObfuskuTaskProvider.taskType, command };
     const execution = new vscode.CustomExecution(
-      async () => new ObfuskuTaskTerminal(folder.uri.fsPath, command, this.diagnostics)
+      async () => new ObfuskuTaskTerminal(folder.uri.fsPath, command, this.diagnostics),
     );
-    const task = new vscode.Task(definition, folder, command, "obfusku", execution);
-    if (command === "build") {
+    const task = new vscode.Task(definition, folder, command, 'obfusku', execution);
+    if (command === 'build') {
       task.group = vscode.TaskGroup.Build;
     }
     return task;
@@ -78,7 +84,7 @@ class ObfuskuTaskTerminal implements vscode.Pseudoterminal {
   constructor(
     private readonly projectRoot: string,
     private readonly command: ObfuskuTaskCommand,
-    private readonly diagnostics: vscode.DiagnosticCollection
+    private readonly diagnostics: vscode.DiagnosticCollection,
   ) {}
 
   open(): void {
@@ -89,33 +95,43 @@ class ObfuskuTaskTerminal implements vscode.Pseudoterminal {
 
   private async execute(): Promise<void> {
     const args = [this.command, this.projectRoot];
-    this.writeEmitter.fire(`> obfusku ${args.join(" ")}\r\n\r\n`);
+    this.writeEmitter.fire(`> obfusku ${args.join(' ')}\r\n\r\n`);
 
-    let stderr = "";
+    let stderr = '';
     const exitCode = await new Promise<number>((resolve) => {
       const child = spawn(obfuskuPath(), args);
-      child.stdout.on("data", (chunk: Buffer) => this.writeEmitter.fire(toTerminalText(chunk)));
-      child.stderr.on("data", (chunk: Buffer) => {
+      child.stdout.on('data', (chunk: Buffer) => this.writeEmitter.fire(toTerminalText(chunk)));
+      child.stderr.on('data', (chunk: Buffer) => {
         stderr += chunk.toString();
         this.writeEmitter.fire(toTerminalText(chunk));
       });
-      child.on("error", () => {
+      child.on('error', () => {
         this.writeEmitter.fire(
-          "Could not find the 'obfusku' executable. Set 'obfusku.path' in your settings.\r\n"
+          "Could not find the 'obfusku' executable. Set 'obfusku.path' in your settings.\r\n",
         );
         resolve(-1);
       });
-      child.on("close", (code) => resolve(code ?? -1));
+      child.on('close', (code) => resolve(code ?? -1));
     });
 
     const entryFile = await resolveEntryFile(this.projectRoot);
-    if (entryFile) {
-      this.diagnostics.set(vscode.Uri.file(entryFile), parseDiagnostics(stderr));
+    if (entryFile && this.command !== 'test') {
+      const entryUri = vscode.Uri.file(entryFile);
+      if (exitCode === 0) {
+        this.diagnostics.delete(entryUri);
+      } else {
+        const info = await cliInfo();
+        const checkResult = info?.json
+          ? await runObfusku(['check', '--json', this.projectRoot])
+          : undefined;
+        const jsonDiagnostics = checkResult && parseJsonDiagnostics(checkResult.stdout);
+        this.diagnostics.set(entryUri, jsonDiagnostics ?? parseDiagnostics(stderr));
+      }
     }
     this.closeEmitter.fire(exitCode);
   }
 }
 
 function toTerminalText(chunk: Buffer): string {
-  return chunk.toString().replace(/\r?\n/g, "\r\n");
+  return chunk.toString().replace(/\r?\n/g, '\r\n');
 }
